@@ -1,0 +1,571 @@
+{
+  "datasets": [
+    {
+      "name": "dataset1",
+      "displayName": "mobilelocations",
+      "queryLines": [
+        "with device_status as (\n",
+        "    select * \n",
+        "    from telco_demos.self_healing_networks.device_status \n",
+        "    order by event_timestamp\n",
+        "),\n",
+        "\n",
+        "last_status as (\n",
+        "    select\n",
+        "        tower_id,\n",
+        "        device,\n",
+        "        last(status) as current_status\n",
+        "    from device_status\n",
+        "    group by all\n",
+        ")\n",
+        "\n",
+        "SELECT\n",
+        "    tower_id,\n",
+        "    COLLECT_LIST(current_status) as statuslist,\n",
+        "    -- CASE\n",
+        "    --     -- Check if any element in the list contains \"telemetry%\"\n",
+        "    --     WHEN ARRAY_EXISTS(COLLECT_LIST(current_status), x -> lower(x) LIKE 'telemetry%') THEN 'Predicted Outage'\n",
+        "    --     ELSE 'human_status'\n",
+        "    -- END AS human_status\n",
+        "FROM\n",
+        "    last_status\n",
+        "group by all"
+      ]
+    },
+    {
+      "name": "a0014ede",
+      "displayName": "fieldtech_route",
+      "queryLines": [
+        "SELECT * FROM telco_demos.self_healing_networks.fieldtech_route\n",
+        "where date = (select max(date) from telco_demos.self_healing_networks.fieldtech_route)"
+      ]
+    },
+    {
+      "name": "c5556217",
+      "displayName": "todays_schedule",
+      "queryLines": [
+        "with todays_schedule as (\n",
+        "SELECT *, case when random_text = 'not scheduled' then random_text  else stop_number end schedule--name, stop_number\n",
+        "FROM telco_demos.self_healing_networks.fieldtech_route\n",
+        "where date = (select max(date) from telco_demos.self_healing_networks.fieldtech_route)\n",
+        ")\n",
+        "select name, last(schedule) schedule_stops\n",
+        "from todays_schedule\n",
+        "group by all\n",
+        "order by name\n",
+        "-- group by all "
+      ]
+    },
+    {
+      "name": "f2d73a01",
+      "displayName": "sf_mobilelocations",
+      "queryLines": [
+        "SELECT * FROM telco_demos.self_healing_networks.sf_mobilelocations"
+      ]
+    },
+    {
+      "name": "c4ee52cb",
+      "displayName": "device_status",
+      "queryLines": [
+        "SELECT * FROM telco_demos.self_healing_networks.device_status"
+      ]
+    },
+    {
+      "name": "63b4436e",
+      "displayName": "current_tower_status",
+      "queryLines": [
+        "SELECT *\n",
+        " FROM telco_demos.self_healing_networks.current_tower_status"
+      ]
+    },
+    {
+      "name": "a3a86021",
+      "displayName": "outage_resolution",
+      "queryLines": [
+        "SELECT\n",
+        "  date_trunc('MONTH', outage_resolved_date) monthyr,\n",
+        "  AVG(date_diff) AS avg_resolution_time\n",
+        "FROM\n",
+        "  telco_demos.self_healing_networks.outage_resolution\n",
+        "where outage_resolved_date >= '2021-01-01'\n",
+        "\n",
+        "GROUP BY ALL\n",
+        "ORDER BY monthyr\n"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "page1",
+      "displayName": "Bricks Mobile Status",
+      "layout": [
+        {
+          "widget": {
+            "name": "text_box1",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# Bricks Mobile Bay Area Operations Dashboard\n",
+                "\n",
+                "*The Bay Area's Leading Mobile Services Provider*\n",
+                "\n",
+                "This dashboard provides a centralized view of Bricks Mobile’s network operations, displaying mobile tower locations, field technician schedules, and planned service stops on an interactive map. Since we use Databricks, we can ingest telemetry data from our mobile tower devices, build ETL pipelines, and use AI models to predict outages. This helps us to prevent outages, one of many reasons we have the best customer loyalty scores in the industry.\n",
+                "\n",
+                "Related Links: \n",
+                "- [Job Overview](https://e2-demo-field-eng.cloud.databricks.com/jobs/354655599040510/runs/47119841299333?o=1444828305810485)\n",
+                "- [Catalog](https://e2-demo-field-eng.cloud.databricks.com/explore/data/telco_demos/self_healing_networks?o=1444828305810485)\n",
+                "- [Vector Search](https://e2-demo-field-eng.cloud.databricks.com/explore/data/telco_demos/self_healing_networks/shn_device_docs_vs?o=1444828305810485)\n",
+                "- [Field Tech Chatbot](https://e2-demo-field-eng.cloud.databricks.com/ml/playground?endpoints=ka-5382d14f-endpoint&o=1444828305810485)"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "ec148010",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "c5556217",
+                  "fields": [
+                    {
+                      "name": "name",
+                      "expression": "`name`"
+                    },
+                    {
+                      "name": "schedule_stops",
+                      "expression": "`schedule_stops`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "name",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100000,
+                    "title": "name",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "name"
+                  },
+                  {
+                    "fieldName": "schedule_stops",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 100001,
+                    "title": "schedule_stops",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "schedule_stops"
+                  }
+                ]
+              },
+              "invisibleColumns": [],
+              "allowHTMLByDefault": false,
+              "itemsPerPage": 25,
+              "paginationSize": "default",
+              "condensed": true,
+              "withRowNumber": false,
+              "frame": {
+                "showTitle": true,
+                "title": "Today's Posted Schedule"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 18,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "66c2cf37",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "a0014ede",
+                  "fields": [
+                    {
+                      "name": "name",
+                      "expression": "`name`"
+                    },
+                    {
+                      "name": "lat",
+                      "expression": "`lat`"
+                    },
+                    {
+                      "name": "lon",
+                      "expression": "`lon`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "symbol-map",
+              "encodings": {
+                "coordinates": {
+                  "latitude": {
+                    "fieldName": "lat",
+                    "displayName": "lat"
+                  },
+                  "longitude": {
+                    "fieldName": "lon",
+                    "displayName": "lon"
+                  }
+                },
+                "color": {
+                  "fieldName": "name",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "name"
+                }
+              },
+              "frame": {
+                "title": "Map of fieldtech route stops",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 18,
+            "width": 3,
+            "height": 12
+          }
+        },
+        {
+          "widget": {
+            "name": "2f78842a",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "63b4436e",
+                  "fields": [
+                    {
+                      "name": "TowerStatus",
+                      "expression": "`TowerStatus`"
+                    },
+                    {
+                      "name": "lat",
+                      "expression": "`lat`"
+                    },
+                    {
+                      "name": "lon",
+                      "expression": "`lon`"
+                    },
+                    {
+                      "name": "range",
+                      "expression": "`range`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "symbol-map",
+              "encodings": {
+                "coordinates": {
+                  "latitude": {
+                    "fieldName": "lat",
+                    "displayName": "lat"
+                  },
+                  "longitude": {
+                    "fieldName": "lon",
+                    "displayName": "lon"
+                  }
+                },
+                "color": {
+                  "fieldName": "TowerStatus",
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "Automated Fix",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 3
+                        }
+                      },
+                      {
+                        "value": "System Online and Functioning",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 9
+                        }
+                      },
+                      {
+                        "value": "Telemetry Issue Detected",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 4
+                        }
+                      }
+                    ]
+                  },
+                  "displayName": "TowerStatus"
+                },
+                "size": {
+                  "fieldName": "range",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "range"
+                }
+              },
+              "mark": {
+                "opacity": 0.26
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 6,
+            "width": 6,
+            "height": 12
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS"
+    },
+    {
+      "name": "abb5daef",
+      "displayName": "Bricks Mobile AI",
+      "layout": [
+        {
+          "widget": {
+            "name": "fd362c02",
+            "multilineTextboxSpec": {
+              "lines": [
+                "\n",
+                "# Bricks Mobile Bay Area Operations Dashboard\n",
+                "\n",
+                "*The Leading AI Company Selling Mobile Services to the Bay Area*\n",
+                "\n",
+                "We used our models to predict outages, but now that we are an AI company, we didn't stop there. Where we predicted an outage, we fed the telemetry messages to our vendor device manuals. Sometimes a remote fix was possible (e.g. software update push). In others we deployed a field technician to the site, using today's routes to minimize sitting in traffic. \n",
+                "\n",
+                "Now that we can scalably and automatically route technicians we can focus more on measuring improvements and less on manual scheduling processes."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "d9d7d031",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "63b4436e",
+                  "fields": [
+                    {
+                      "name": "GenAITowerStatus",
+                      "expression": "`GenAITowerStatus`"
+                    },
+                    {
+                      "name": "lat",
+                      "expression": "`lat`"
+                    },
+                    {
+                      "name": "lon",
+                      "expression": "`lon`"
+                    },
+                    {
+                      "name": "range",
+                      "expression": "`range`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "symbol-map",
+              "encodings": {
+                "coordinates": {
+                  "latitude": {
+                    "fieldName": "lat",
+                    "displayName": "lat"
+                  },
+                  "longitude": {
+                    "fieldName": "lon",
+                    "displayName": "lon"
+                  }
+                },
+                "color": {
+                  "fieldName": "GenAITowerStatus",
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "Automated Fix",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 3
+                        }
+                      },
+                      {
+                        "value": "System Online and Functioning",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 9
+                        }
+                      },
+                      {
+                        "value": "Telemetry Issue Detected",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 4
+                        }
+                      }
+                    ]
+                  },
+                  "displayName": "GenAITowerStatus"
+                },
+                "size": {
+                  "fieldName": "range",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "range"
+                }
+              },
+              "mark": {
+                "opacity": 0.26
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 6,
+            "width": 6,
+            "height": 13
+          }
+        },
+        {
+          "widget": {
+            "name": "bd258e25",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "a3a86021",
+                  "fields": [
+                    {
+                      "name": "monthly(monthyr)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `monthyr`)"
+                    },
+                    {
+                      "name": "avg_resolution_time",
+                      "expression": "`avg_resolution_time`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "monthly(monthyr)",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "format": {
+                    "type": "date-time",
+                    "date": "locale-short-month",
+                    "time": "locale-hour-minute"
+                  },
+                  "displayName": "monthyr"
+                },
+                "y": {
+                  "fieldName": "avg_resolution_time",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "avg_resolution_time"
+                },
+                "label": {
+                  "show": false
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 19,
+            "width": 6,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS"
+    }
+  ]
+}
