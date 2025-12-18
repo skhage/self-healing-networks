@@ -1,20 +1,13 @@
 data_params:
-  catalog: telco_demos
+  catalog: telecommunications
   schema: self_healing_networks
   manuals_volume: device_mans
   towers_volume: towerlocations
 
 model_params:
   prompt: ""  
-  endpoint: 
+  endpoint: shn_device_ka
 
 simulation_params:
   n_fieldtechs: 123
 
-Scenarios:
-- Comba CriticalPoint V3 Battery Backup Unit battery low alarm indicates the battery capacity is below 30%.
-- Comba CriticalPoint V3 Battery Backup Unit charger fault alarm suggests there is high voltage or current output.
-- Comba CriticalPoint V3 Battery Backup Unit over-discharge has been detected.
-- Comba CriticalPoint V3 Battery Backup Unit battery over temperature alarm has been triggered.
-- Comba CriticalPoint cavity filter needs to be replaced.
-- InHand 5G FWA02 signal strength is weak based on the logs.

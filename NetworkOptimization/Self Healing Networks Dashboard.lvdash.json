@@ -6,7 +6,7 @@
       "queryLines": [
         "with device_status as (\n",
         "    select * \n",
-        "    from telco_demos.self_healing_networks.device_status \n",
+        "    from telecommunications.self_healing_networks.device_status \n",
         "    order by event_timestamp\n",
         "),\n",
         "\n",
@@ -21,7 +21,7 @@
         "\n",
         "SELECT\n",
         "    tower_id,\n",
-        "    COLLECT_LIST(current_status) as statuslist,\n",
+        "    COLLECT_LIST(current_status) as statuslist\n",
         "    -- CASE\n",
         "    --     -- Check if any element in the list contains \"telemetry%\"\n",
         "    --     WHEN ARRAY_EXISTS(COLLECT_LIST(current_status), x -> lower(x) LIKE 'telemetry%') THEN 'Predicted Outage'\n",
@@ -36,8 +36,8 @@
       "name": "a0014ede",
       "displayName": "fieldtech_route",
       "queryLines": [
-        "SELECT * FROM telco_demos.self_healing_networks.fieldtech_route\n",
-        "where date = (select max(date) from telco_demos.self_healing_networks.fieldtech_route)"
+        "SELECT * FROM telecommunications.self_healing_networks.fieldtech_route\n",
+        "where date = (select max(date) from telecommunications.self_healing_networks.fieldtech_route)"
       ]
     },
     {
@@ -46,8 +46,8 @@
       "queryLines": [
         "with todays_schedule as (\n",
         "SELECT *, case when random_text = 'not scheduled' then random_text  else stop_number end schedule--name, stop_number\n",
-        "FROM telco_demos.self_healing_networks.fieldtech_route\n",
-        "where date = (select max(date) from telco_demos.self_healing_networks.fieldtech_route)\n",
+        "FROM telecommunications.self_healing_networks.fieldtech_route\n",
+        "where date = (select max(date) from telecommunications.self_healing_networks.fieldtech_route)\n",
         ")\n",
         "select name, last(schedule) schedule_stops\n",
         "from todays_schedule\n",
@@ -60,14 +60,14 @@
       "name": "f2d73a01",
       "displayName": "sf_mobilelocations",
       "queryLines": [
-        "SELECT * FROM telco_demos.self_healing_networks.sf_mobilelocations"
+        "SELECT * FROM telecommunications.self_healing_networks.sf_mobilelocations"
       ]
     },
     {
       "name": "c4ee52cb",
       "displayName": "device_status",
       "queryLines": [
-        "SELECT * FROM telco_demos.self_healing_networks.device_status"
+        "SELECT * FROM telecommunications.self_healing_networks.device_status"
       ]
     },
     {
@@ -75,7 +75,7 @@
       "displayName": "current_tower_status",
       "queryLines": [
         "SELECT *\n",
-        " FROM telco_demos.self_healing_networks.current_tower_status"
+        " FROM telecommunications.self_healing_networks.genai_status"
       ]
     },
     {
@@ -86,11 +86,18 @@
         "  date_trunc('MONTH', outage_resolved_date) monthyr,\n",
         "  AVG(date_diff) AS avg_resolution_time\n",
         "FROM\n",
-        "  telco_demos.self_healing_networks.outage_resolution\n",
+        "  telecommunications.self_healing_networks.outage_resolution\n",
         "where outage_resolved_date >= '2021-01-01'\n",
         "\n",
         "GROUP BY ALL\n",
         "ORDER BY monthyr\n"
+      ]
+    },
+    {
+      "name": "2bdd61d5",
+      "displayName": "current_status",
+      "queryLines": [
+        "SELECT * FROM telecommunications.self_healing_networks.current_status"
       ]
     }
   ],
@@ -295,11 +302,11 @@
               {
                 "name": "main_query",
                 "query": {
-                  "datasetName": "63b4436e",
+                  "datasetName": "2bdd61d5",
                   "fields": [
                     {
-                      "name": "TowerStatus",
-                      "expression": "`TowerStatus`"
+                      "name": "Tower_Status",
+                      "expression": "`Tower_Status`"
                     },
                     {
                       "name": "lat",
@@ -333,7 +340,7 @@
                   }
                 },
                 "color": {
-                  "fieldName": "TowerStatus",
+                  "fieldName": "Tower_Status",
                   "scale": {
                     "type": "categorical",
                     "mappings": [
@@ -366,8 +373,7 @@
                   "fieldName": "range",
                   "scale": {
                     "type": "quantitative"
-                  },
-                  "displayName": "range"
+                  }
                 }
               },
               "mark": {
@@ -422,8 +428,8 @@
                   "datasetName": "63b4436e",
                   "fields": [
                     {
-                      "name": "GenAITowerStatus",
-                      "expression": "`GenAITowerStatus`"
+                      "name": "Overall_Fix_Status",
+                      "expression": "`Overall_Fix_Status`"
                     },
                     {
                       "name": "lat",
@@ -432,6 +438,10 @@
                     {
                       "name": "lon",
                       "expression": "`lon`"
+                    },
+                    {
+                      "name": "device_fix_details",
+                      "expression": "`device_fix_details`"
                     },
                     {
                       "name": "range",
@@ -457,7 +467,7 @@
                   }
                 },
                 "color": {
-                  "fieldName": "GenAITowerStatus",
+                  "fieldName": "Overall_Fix_Status",
                   "scale": {
                     "type": "categorical",
                     "mappings": [
@@ -481,6 +491,13 @@
                           "themeColorType": "visualizationColors",
                           "position": 4
                         }
+                      },
+                      {
+                        "value": "Field Technician Deployed",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 2
+                        }
                       }
                     ]
                   },
@@ -492,7 +509,12 @@
                     "type": "quantitative"
                   },
                   "displayName": "range"
-                }
+                },
+                "extra": [
+                  {
+                    "fieldName": "device_fix_details"
+                  }
+                ]
               },
               "mark": {
                 "opacity": 0.26
@@ -567,5 +589,14 @@
       ],
       "pageType": "PAGE_TYPE_CANVAS"
     }
-  ]
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    },
+    "genieSpace": {
+      "isEnabled": false
+    },
+    "applyModeEnabled": false
+  }
 }
